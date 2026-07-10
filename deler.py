@@ -64,18 +64,21 @@ def dir_print_info(dir_path, files):
 
 
 def get_hash(file):
-    hash = hashlib.md5()
+    hash = hashlib.sha1()
     with open(file, 'rb') as f:
-        for chunk in iter(lambda: f.read(128 * hash.block_size), b''):
+        #for chunk in iter(lambda: f.read(128 * hash.block_size), b''):
+        for chunk in iter(lambda: f.read(4 * 1024 * 1024), b''):
             hash.update(chunk)
     return hash.hexdigest()
 
 def process_files(files):
+    num = 0
     hashes = []
     rasstrel = []
     for i in files:
+        num += 1
         filesize = i.stat().st_size
-        print(f'Обрабатываем файл: {i}\nРазмер файла: {filesize} Byte')
+        print(f'Обрабатываем файл: {i}\nРазмер файла: {filesize} Byte [{num}/{len(files)}]')
         filehash = get_hash(i)
         if filehash not in hashes:
             hashes.append(filehash)
@@ -98,10 +101,12 @@ def killing_machine(rasstrel):
         print(i)
     print(f'\nУдалить их? (Да\Нет)')
     user_input = str(input())
+    while user_input not in ['Да', 'Нет']:
+        user_input = str(input('Удалить их? (Да\Нет)'))
+    if user_input == 'Нет':
+        return
     if user_input == 'Да':
         delete_files(rasstrel)
-    if not user_input == 'Да':
-        return
     return
 
 def main():

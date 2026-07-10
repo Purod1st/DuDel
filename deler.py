@@ -1,14 +1,38 @@
+from os import environ
 import hashlib 
-import time
 from pathlib import Path
 
+
+def wsl_detect():
+    if 'WSL_VERSION' in environ or 'WSL2_GUI_APPS_ENABLED' in environ or 'WSL_DISTRO_NAME' in environ:
+        return True
+    else:
+        return False
+    
+def wsl_normalize(dir_path) -> str:
+    prefix = '/mnt/'
+    print(f'НАМ ПРИШЛО: {dir_path}')
+    new_dir_path = str(dir_path).lower()
+    new_dir_path = new_dir_path.replace(':\\', '/').replace('\\', '/')
+    print(f'СТРОЧНОЕ НАПИСАНИЕ ДИРЕКТОРИИ {new_dir_path}')
+    if new_dir_path.startswith('/mnt'):
+        return
+    outer_dir_path = prefix + new_dir_path
+    print(f'НОВАЯ ДИРЕКТОИИЯ{outer_dir_path}')
+    return outer_dir_path
 
 def get_path():
     """
     Запрашиваем директорию для работы или устанавыливаем дефолтную
     """
     _dir_path = str(input('Введите директорию '))
-    dir_path = Path(_dir_path).resolve()
+    if wsl_detect():
+        print('ОБНАРУЖЕН WSL, ОТПРАВЛЕНО НА ПРЕОБРАЗОВАНИЕ')
+        dir_path = wsl_normalize(_dir_path)
+    else:
+        print('WSL НЕ ОБНАРУЖЕН')
+    dir_path = Path(dir_path).resolve()
+    print(f'НАРЕЗОЛВИЛИ: {dir_path}')
     return dir_path
 
 def get_dir(dir_path):
@@ -37,7 +61,6 @@ def dir_print_info(dir_path, files):
     Вывод инфомрации о директории
     """
     print(f'В директории {dir_path} имеется {len(files)} файлов')
-    #print('По какому принципу проводим чистку?')
 
 
 def get_hash(file):
@@ -92,8 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# TODO
-# получаем хеши слайсами по 100
-#храним в словаре хеш:путь
-#получили 100 --> удалили дубли --> получили следующие 100 --> повторять пока не кончатся
